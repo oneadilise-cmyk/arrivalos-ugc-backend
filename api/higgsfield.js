@@ -12,12 +12,14 @@
 
 const HF_BASE = 'https://platform.higgsfield.ai';
 
-// Nano Banana Pro's model slug, per Higgsfield's CLI (job_set_type: nano_banana_2).
-// ⚠️ VERIFY THIS before your first real customer generation: log into
-// cloud.higgsfield.ai, find "Nano Banana Pro" (or "Nano Banana 2") in the model
-// list, and copy its exact model_id string shown there. Swap it in below if it
-// differs from this placeholder.
-const MODEL_ID = 'higgsfield-ai/nano-banana-2/standard';
+// Flux Pro Kontext Max — a confirmed, working text-to-image model on Higgsfield's
+// API (Nano Banana Pro is not reliably available via the API on every account/plan,
+// even though it appears in Higgsfield's consumer app). This model needs no
+// reference image and produces strong photorealistic results.
+//
+// To switch models later (e.g. if Nano Banana becomes available on your plan),
+// just change this one line to the new model_id and redeploy.
+const MODEL_ID = 'flux-pro/kontext/max/text-to-image';
 
 export default async function handler(req, res) {
   // CORS — allows your Netlify-hosted frontend to call this Vercel function
