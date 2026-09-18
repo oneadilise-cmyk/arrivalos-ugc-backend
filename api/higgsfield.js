@@ -10,16 +10,13 @@
 // (Higgsfield issues credentials as a KEY_ID + KEY_SECRET pair, not a single key.
 //  Get both from https://cloud.higgsfield.ai → API Keys.)
 
-const HF_BASE = 'https://platform.higgsfield.ai';
+const HF_BASE = 'https://api.higgsfield.ai';
 
-// Flux Pro Kontext Max — a confirmed, working text-to-image model on Higgsfield's
-// API (Nano Banana Pro is not reliably available via the API on every account/plan,
-// even though it appears in Higgsfield's consumer app). This model needs no
-// reference image and produces strong photorealistic results.
-//
-// To switch models later (e.g. if Nano Banana becomes available on your plan),
-// just change this one line to the new model_id and redeploy.
-const MODEL_ID = 'flux-pro/kontext/max/text-to-image';
+// Higgsfield Soul 2 — confirmed real, working model ID straight from
+// console.higgsfield.ai's own API docs for this account (Explore models →
+// Soul 2 → API tab). This is a Higgsfield-owned model, not a licensed
+// third-party one, which is why it's reliably available on the API.
+const MODEL_ID = 'higgsfield-ai/soul/v2/standard';
 
 export default async function handler(req, res) {
   // CORS — allows your Netlify-hosted frontend to call this Vercel function
