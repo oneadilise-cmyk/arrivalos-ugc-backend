@@ -1,5 +1,650 @@
-The page could not be found
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArrivalOS UGC Agent v2 — Powered by Kayo</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap');
 
-NOT_FOUND
+    :root {
+      --gold:    #ffd700;
+      --emerald: #50c878;
+      --navy:    #0f1419;
+      --navy2:   #1a2847;
+      --surface: rgba(255,255,255,0.05);
+      --border:  rgba(255,215,0,0.15);
+      --muted:   #a8adb5;
+      --text:    #e8eaed;
+    }
 
-iad1::5nqb2-1790344883772-3fd6a7e6eee4
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 16px 80px;
+    }
+
+    .wrap { max-width: 1160px; margin: 0 auto; }
+
+    /* HEADER */
+    header { text-align: center; margin-bottom: 36px; padding-bottom: 26px; border-bottom: 1px solid var(--border); }
+    header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.7rem, 4vw, 2.6rem);
+      background: linear-gradient(120deg, var(--gold) 0%, var(--emerald) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 8px;
+    }
+    header p { color: var(--muted); font-size: .92rem; }
+
+    /* PROXY CONFIG BANNER — replaces API key field */
+    .proxy-banner {
+      background: rgba(80,200,120,0.08);
+      border: 1px solid var(--emerald);
+      border-radius: 10px;
+      padding: 14px 20px;
+      margin-bottom: 26px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .proxy-banner .proxy-icon { font-size: 1.6rem; }
+    .proxy-banner .proxy-text { flex: 1; }
+    .proxy-banner .proxy-title { color: var(--emerald); font-weight: 600; font-size: .9rem; margin-bottom: 3px; }
+    .proxy-banner .proxy-sub   { color: var(--muted); font-size: .78rem; }
+    .proxy-url-wrap { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .proxy-url-wrap label { color: var(--gold); font-size: .82rem; font-weight: 600; white-space: nowrap; }
+    .proxy-url-wrap input {
+      flex: 1; min-width: 260px;
+      background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text);
+      padding: 8px 12px; font-size: .85rem; font-family: 'Monaco', monospace;
+    }
+    .proxy-url-wrap input:focus { outline: none; border-color: var(--emerald); }
+
+    /* PHASE STEPS */
+    .steps {
+      display: flex; margin-bottom: 28px;
+      background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+    }
+    .step { flex: 1; padding: 11px 8px; text-align: center; font-size: .76rem; font-weight: 600; color: var(--muted); border-right: 1px solid var(--border); transition: all .3s; }
+    .step:last-child { border-right: none; }
+    .step-num { display: block; font-size: 1.1rem; margin-bottom: 2px; }
+    .step.active { background: rgba(255,215,0,0.12); color: var(--gold); }
+    .step.done   { background: rgba(80,200,120,0.10); color: var(--emerald); }
+
+    /* GRID */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-bottom: 24px; }
+    @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+
+    /* PANEL */
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; backdrop-filter: blur(12px); }
+    .panel h2 { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; color: var(--gold); margin-bottom: 18px; }
+
+    /* FORM */
+    .field { margin-bottom: 15px; }
+    .field label { display: block; font-size: .85rem; font-weight: 500; margin-bottom: 5px; }
+    .field input, .field select, .field textarea {
+      width: 100%; background: rgba(255,255,255,0.07); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--text); padding: 10px 12px; font-size: .9rem;
+      font-family: inherit; transition: border-color .2s;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--gold); }
+    .field textarea { min-height: 66px; resize: vertical; }
+
+    .color-row { display: flex; gap: 12px; }
+    .color-row > div { flex: 1; }
+    .csw { display: flex; align-items: center; gap: 8px; }
+    input[type="color"] { width: 42px; height: 42px; padding: 3px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); background: transparent; }
+
+    .chips { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .chip { padding: 9px 7px; background: rgba(255,255,255,0.04); border: 2px solid var(--border); border-radius: 8px; cursor: pointer; text-align: center; font-size: .82rem; transition: all .2s; user-select: none; }
+    .chip:hover { background: rgba(255,215,0,0.08); border-color: var(--gold); }
+    .chip.active { background: rgba(255,215,0,0.18); border-color: var(--gold); color: var(--gold); font-weight: 600; }
+
+    /* BUTTONS */
+    .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+    .btn { flex: 1; padding: 12px 18px; font-size: .92rem; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; transition: all .25s; font-family: inherit; }
+    .btn-primary { background: linear-gradient(120deg, var(--gold) 0%, var(--emerald) 100%); color: var(--navy); }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(255,215,0,0.28); }
+    .btn-primary:disabled { opacity: .42; cursor: not-allowed; transform: none; }
+    .btn-ghost { background: rgba(255,255,255,0.07); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.12); }
+
+    /* STRATEGY */
+    .si { padding: 11px 13px; border-radius: 8px; margin-bottom: 9px; border-left: 3px solid; }
+    .si.gold  { background: rgba(255,215,0,0.06);   border-color: var(--gold); }
+    .si.green { background: rgba(80,200,120,0.06);  border-color: var(--emerald); }
+    .si.blue  { background: rgba(100,200,255,0.06); border-color: #64c8ff; }
+    .si .st { font-weight: 600; font-size: .86rem; margin-bottom: 2px; }
+    .si.gold  .st { color: var(--gold); }
+    .si.green .st { color: var(--emerald); }
+    .si.blue  .st { color: #64c8ff; }
+    .si .ss { color: var(--muted); font-size: .78rem; }
+
+    /* LOG */
+    .log-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; backdrop-filter: blur(12px); margin-bottom: 24px; }
+    .log-panel h2 { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; color: var(--gold); margin-bottom: 16px; }
+    .job-list { display: flex; flex-direction: column; gap: 11px; }
+    .job-row { background: rgba(0,0,0,0.22); border: 1px solid var(--border); border-radius: 10px; padding: 13px 16px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; transition: border-color .3s; }
+    .job-row.done { border-color: var(--emerald); }
+    .job-icon { font-size: 1.3rem; }
+    .job-label { font-weight: 600; font-size: .88rem; margin-bottom: 2px; }
+    .job-id { font-family: 'Monaco', monospace; font-size: .7rem; color: var(--muted); word-break: break-all; }
+    .job-prompt { font-size: .74rem; color: var(--muted); margin-top: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: .7rem; font-weight: 600; white-space: nowrap; }
+    .badge.queued    { background: rgba(255,215,0,0.15);   color: var(--gold); }
+    .badge.submitted { background: rgba(100,180,255,0.15); color: #64c8ff; }
+    .badge.polling   { background: rgba(255,165,0,0.15);   color: orange; }
+    .badge.done      { background: rgba(80,200,120,0.15);  color: var(--emerald); }
+    .badge.error     { background: rgba(255,80,80,0.15);   color: #ff6464; }
+
+    /* GALLERY */
+    .gallery-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; backdrop-filter: blur(12px); }
+    .gallery-panel h2 { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; color: var(--gold); margin-bottom: 18px; }
+    .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+
+    .img-card { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: all .3s; }
+    .img-card:hover { border-color: var(--gold); transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,0.4); }
+    .img-card.done { border-color: var(--emerald); }
+
+    .img-skeleton { width: 100%; height: 260px; background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    .skel-icon { font-size: 1.8rem; opacity: .4; }
+    .skel-txt  { color: var(--muted); font-size: .78rem; text-align: center; padding: 0 16px; }
+    .skel-bar  { height: 4px; width: 55px; background: rgba(255,215,0,0.3); border-radius: 2px; animation: pulse 1s infinite alternate; }
+    @keyframes pulse { from { opacity: .3; } to { opacity: 1; } }
+
+    .img-reveal { width: 100%; display: block; animation: fadein .6s ease; }
+    @keyframes fadein { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
+
+    .img-footer { padding: 12px 14px; }
+    .img-title  { font-weight: 600; font-size: .86rem; margin-bottom: 3px; }
+    .img-spec   { font-size: .74rem; color: var(--muted); margin-bottom: 10px; }
+    .btn-copy { width: 100%; padding: 8px; font-size: .8rem; font-weight: 600; background: rgba(255,215,0,0.1); border: 1px solid var(--gold); border-radius: 6px; color: var(--gold); cursor: pointer; transition: all .2s; font-family: inherit; }
+    .btn-copy:hover:not(:disabled) { background: rgba(255,215,0,0.2); }
+    .btn-copy:disabled { opacity: .4; cursor: not-allowed; }
+
+    .empty { text-align: center; color: var(--muted); padding: 48px 0; }
+    .empty span { font-size: 2.8rem; display: block; margin-bottom: 12px; opacity: .5; }
+
+    /* TOAST */
+    #toast-area { position: fixed; bottom: 22px; right: 22px; display: flex; flex-direction: column; gap: 8px; z-index: 999; }
+    .toast { padding: 11px 16px; border-radius: 8px; font-size: .84rem; font-weight: 500; max-width: 310px; animation: slidein .3s ease; }
+    .toast.success { background: rgba(80,200,120,0.93); color: #0f1419; border: 1px solid var(--emerald); }
+    .toast.error   { background: rgba(255,80,80,0.93);  color: #fff;    border: 1px solid #ff4444; }
+    .toast.info    { background: rgba(100,200,255,0.93);color: #0f1419; border: 1px solid #64c8ff; }
+    @keyframes slidein { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+    .spin { display: inline-block; width: 15px; height: 15px; border: 2px solid rgba(15,20,25,.3); border-top-color: var(--navy); border-radius: 50%; animation: rot .7s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes rot { to { transform: rotate(360deg); } }
+
+    /* SECURITY NOTE */
+    .security-note { background: rgba(80,200,120,0.05); border: 1px solid rgba(80,200,120,0.2); border-radius: 8px; padding: 12px 14px; margin-top: 14px; }
+    .security-note .sn-title { color: var(--emerald); font-weight: 600; font-size: .82rem; margin-bottom: 5px; }
+    .security-note .sn-body  { color: var(--muted); font-size: .76rem; line-height: 1.6; }
+
+    footer { text-align: center; margin-top: 50px; color: var(--muted); font-size: .8rem; }
+    footer strong { color: var(--gold); }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>✈️ ArrivalOS UGC Agent</h1>
+    <p>Powered by <strong style="color:var(--gold)">Kayo's secure backend</strong> — no API key needed, ever.</p>
+  </header>
+
+  <!-- PHASE STEPS -->
+  <div class="steps">
+    <div class="step active" id="step1"><span class="step-num">📝</span>Brand Input</div>
+    <div class="step" id="step2"><span class="step-num">🚀</span>Submit</div>
+    <div class="step" id="step3"><span class="step-num">⏳</span>Polling</div>
+    <div class="step" id="step4"><span class="step-num">🖼️</span>Images Live</div>
+  </div>
+
+  <!-- PROXY BANNER — no API key field for client -->
+  <div class="proxy-banner">
+    <div class="proxy-icon">🔐</div>
+    <div class="proxy-text">
+      <div class="proxy-title">Connected to Kayo's Higgsfield Backend</div>
+      <div class="proxy-sub">Your Higgsfield credentials are stored server-side on Vercel. Clients just fill the form — no keys, no accounts.</div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="grid">
+
+    <!-- Brand form -->
+    <div class="panel">
+      <h2>📝 Brand Details</h2>
+
+      <div class="field">
+        <label>Brand / App Name</label>
+        <input type="text" id="brandName" value="ArrivalOS" />
+      </div>
+
+      <div class="field">
+        <label>Brand Colors</label>
+        <div class="color-row">
+          <div>
+            <div style="font-size:.76rem;color:var(--muted);margin-bottom:4px">Primary</div>
+            <div class="csw">
+              <input type="color" id="primaryColor" value="#50c878" />
+              <input type="text"  id="primaryHex"   value="#50c878" style="width:82px;font-family:monospace;font-size:.78rem" />
+            </div>
+          </div>
+          <div>
+            <div style="font-size:.76rem;color:var(--muted);margin-bottom:4px">Secondary</div>
+            <div class="csw">
+              <input type="color" id="secondaryColor" value="#ffd700" />
+              <input type="text"  id="secondaryHex"   value="#ffd700" style="width:82px;font-family:monospace;font-size:.78rem" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Feature to Showcase</label>
+        <div class="chips">
+          <div class="chip active" data-val="Airport Transfers">🚗 Transfers</div>
+          <div class="chip"        data-val="Real-Time Tracking">📍 Tracking</div>
+          <div class="chip"        data-val="Safe & Reliable">✅ Safety</div>
+          <div class="chip"        data-val="Cashless Payments">💳 Payments</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Feature Description</label>
+        <textarea id="featureDesc">Trusted airport-to-city transfer solution available worldwide.</textarea>
+      </div>
+
+      <div class="field">
+        <label>CTA Text</label>
+        <input type="text" id="ctaText" value="PLAN MY ARRIVAL" />
+      </div>
+
+      <div class="field">
+        <label>Real-World Context</label>
+        <select id="context">
+          <option value="airport arrivals terminal with luxury vehicles">Airport Terminal</option>
+          <option value="city streets at dusk with modern buildings">Urban Cityscape</option>
+          <option value="hotel entrance with luxury car pickup">Hotel Entrance</option>
+          <option value="highway with premium vehicles at golden hour">Open Highway</option>
+          <option value="business district with professional commuters">Business District</option>
+        </select>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="submitBtn" onclick="runPipeline()">
+          🚀 Generate &amp; Preview
+        </button>
+        <button class="btn btn-ghost" onclick="resetAll()">Reset</button>
+      </div>
+
+      <div class="security-note">
+        <div class="sn-title">🔐 How the Backend Protects You</div>
+        <div class="sn-body">
+          This UI calls <strong>your Vercel backend</strong>, not Higgsfield directly.
+          Your Higgsfield credentials live only in Vercel's encrypted environment variables — server-side, never exposed to the browser.
+          Clients just use the tool — no API account needed.
+        </div>
+      </div>
+    </div>
+
+    <!-- Strategy -->
+    <div class="panel">
+      <h2>🎨 3-Format Strategy</h2>
+      <div class="si gold">
+        <div class="st">📱 Instagram Feed Post</div>
+        <div class="ss">1080 × 1350 · 4:5 · Carousel · Nano Banana Pro</div>
+      </div>
+      <div class="si green">
+        <div class="st">📲 Story Thumbnail</div>
+        <div class="ss">1080 × 1920 · 9:16 · Quick-swipe · Natural lighting</div>
+      </div>
+      <div class="si blue">
+        <div class="st">🎬 Reel / TikTok Thumbnail</div>
+        <div class="ss">1080 × 1920 · 9:16 · Hook-driven · Split-screen</div>
+      </div>
+
+      <div style="margin-top:16px;padding:13px;background:rgba(255,215,0,0.05);border:1px solid var(--border);border-radius:8px;">
+        <div style="color:var(--gold);font-weight:600;font-size:.84rem;margin-bottom:8px">⚙️ White-Label Pipeline</div>
+        <ol style="color:var(--muted);font-size:.78rem;line-height:2;padding-left:15px">
+          <li>Client fills form — no API key needed</li>
+          <li>Browser calls your Vercel backend</li>
+          <li>Backend calls Higgsfield with YOUR credentials (hidden)</li>
+          <li>Higgsfield queues the generation request</li>
+          <li>Backend polls every 8s until images are ready</li>
+          <li>Images appear live — client downloads</li>
+        </ol>
+      </div>
+
+      <div style="margin-top:12px;padding:12px;background:rgba(80,200,120,0.07);border:1px solid rgba(80,200,120,0.3);border-radius:8px;">
+        <div style="color:var(--emerald);font-weight:600;font-size:.82rem">💰 Your Margin at $29/month</div>
+        <div style="color:var(--muted);font-size:.76rem;margin-top:5px;line-height:1.7">
+          API cost ≈ $0.60–$1.50/client/month<br>
+          Revenue = $29/month/client<br>
+          <strong style="color:var(--emerald)">Margin ≈ 95% per client</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBMISSION LOG -->
+  <div class="log-panel">
+    <h2>📊 Submission Log</h2>
+    <div class="job-list" id="jobList">
+      <div class="empty" id="emptyLog">
+        <span>🤖</span>
+        <div>Click <strong style="color:var(--gold)">Generate &amp; Preview</strong> to start.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE GALLERY -->
+  <div class="gallery-panel">
+    <h2>🖼️ Live Image Gallery</h2>
+    <div class="gallery" id="gallery">
+      <div class="empty" id="emptyGallery" style="grid-column:1/-1">
+        <span>🎨</span>
+        <div>Generated images appear here in real time as each one completes.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div id="toast-area"></div>
+
+<footer>
+  <p>Powered by <strong>Vercel</strong> · <strong>Higgsfield Nano Banana Pro</strong> · Built for Kayo Services</p>
+  <p style="margin-top:6px">Kayo UGC Agent v2 · White-Label SaaS · Next: Phase C — One-Click Download</p>
+</footer>
+
+<script>
+/* ═══════════════ STATE ═══════════════ */
+let selectedFeature = 'Airport Transfers';
+let activePollers   = {};
+let jobMeta         = {};
+
+// Your live Vercel backend — customers never see or touch this.
+const API_BASE_URL = 'https://arrivalos-ugc-backend.vercel.app/api/higgsfield';
+
+/* ═══════════════ COLOR SYNC ═══════════════ */
+['primary','secondary'].forEach(k => {
+  document.getElementById(`${k}Color`).addEventListener('input', e => {
+    document.getElementById(`${k}Hex`).value = e.target.value;
+  });
+  document.getElementById(`${k}Hex`).addEventListener('input', e => {
+    if (/^#[0-9a-f]{6}$/i.test(e.target.value))
+      document.getElementById(`${k}Color`).value = e.target.value;
+  });
+});
+
+/* ═══════════════ CHIPS ═══════════════ */
+document.querySelectorAll('.chip').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+    selectedFeature = c.dataset.val;
+  });
+});
+
+/* ═══════════════ PROMPT BUILDER ═══════════════ */
+function buildPrompts(brand, feature, primary, secondary, cta, context) {
+  const p = name(primary), s = name(secondary);
+  return [
+    { label:'Instagram Feed Post',      aspect:'4:5',  icon:'📱',
+      prompt:`Instagram feed post for ${brand} ${feature} app. Authentic UGC photo: traveler holding smartphone showing ${brand} app (${p} UI, ${s} accent buttons) at ${context}. Luxury vehicle blurred bokeh. Natural golden-hour window light, cinematic warmth. Real person, genuine moment. Phone shows "${feature}" with location pin and "${cta}" CTA. High-end travel photography, bright and clean.` },
+    { label:'Story Thumbnail',          aspect:'9:16', icon:'📲',
+      prompt:`Instagram TikTok Story for ${brand}. Vertical 9:16 UGC: hand holding phone (natural grip) showing ${brand} ${feature}. ${p} and ${s} palette on UI. Background: soft-blur ${context}. Natural side-lighting, authentic shadows. Real-world scene. Shows "${feature}" header, location icon, live status, ${s} "${cta}" CTA. Bright, clean, social-native.` },
+    { label:'Reel / TikTok Thumbnail',  aspect:'9:16', icon:'🎬',
+      prompt:`TikTok Reel YouTube Shorts thumbnail for ${brand} ${feature}. Vertical 9:16 split: left — ${context} luxury vehicle; right — ${brand} app (${p} bg, ${s} elements). Bold hook, cinematic contrast. "${feature}" in ${s} top-third. Authentic UGC, real travelers, no CGI. Thumb-stopping, social-optimised.` }
+  ];
+}
+
+function name(hex) {
+  const m={'#50c878':'emerald','#ffd700':'gold','#1a73e8':'blue','#ea4335':'red','#34a853':'green','#fbbc04':'amber','#ff6d00':'orange','#9c27b0':'purple','#ffffff':'white','#000000':'black','#0f1419':'navy'};
+  return m[hex.toLowerCase()] || hex;
+}
+
+/* ═══════════════ MAIN PIPELINE ═══════════════ */
+async function runPipeline() {
+  const brand   = document.getElementById('brandName').value.trim();
+  const desc    = document.getElementById('featureDesc').value.trim();
+  const cta     = document.getElementById('ctaText').value.trim();
+  const primary = document.getElementById('primaryColor').value;
+  const sec     = document.getElementById('secondaryColor').value;
+  const context = document.getElementById('context').value;
+  if (!brand || !desc) { toast('Brand name and description required.', 'error'); return; }
+
+  const prompts = buildPrompts(brand, selectedFeature, primary, sec, cta, context);
+
+  // clear
+  Object.values(activePollers).forEach(clearInterval);
+  activePollers = {}; jobMeta = {};
+  document.getElementById('emptyLog')?.remove();
+  document.getElementById('emptyGallery')?.remove();
+  document.getElementById('jobList').innerHTML = '';
+  document.getElementById('gallery').innerHTML = '';
+
+  setStep(2);
+  setBtn(true, '<span class="spin"></span> Submitting…');
+  toast('Sending prompts to Kayo proxy…', 'info');
+
+  for (let i = 0; i < prompts.length; i++) {
+    const p = prompts[i];
+    const rowId = `row-${i}`;
+    addJobRow(rowId, p.icon, p.label, p.aspect, p.prompt, 'queued', '—');
+    addGalleryCard(rowId, p.label, p.aspect);
+
+    try {
+      const jobId = await proxySubmit(API_BASE_URL, p.prompt, p.aspect);
+      jobMeta[jobId] = { rowId, label: p.label, aspect: p.aspect, prompt: p.prompt };
+      updateJobRow(rowId, 'submitted', jobId);
+      toast(`✅ ${p.label} submitted`, 'success');
+      startPolling(API_BASE_URL, jobId);
+    } catch (err) {
+      updateJobRow(rowId, 'error', err.message);
+      setGalleryError(rowId, err.message);
+      toast(`❌ ${p.label}: ${err.message}`, 'error');
+    }
+    if (i < prompts.length - 1) await sleep(700);
+  }
+
+  setBtn(false, '🚀 Generate &amp; Preview');
+  if (Object.keys(activePollers).length > 0) {
+    setStep(3);
+    toast('Images generating — gallery updating live…', 'info');
+  }
+}
+
+/* ═══════════════ PROXY CALLS ═══════════════ */
+async function proxySubmit(proxyUrl, prompt, aspect_ratio) {
+  const res = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'submit', prompt, aspect_ratio })
+  });
+  const data = await res.json();
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  if (!data.job_id) throw new Error('No Job ID returned from proxy');
+  return data.job_id;
+}
+
+async function proxyPoll(proxyUrl, job_id) {
+  const res = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'poll', job_id })
+  });
+  const data = await res.json();
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  return data; // { status, image_url }
+}
+
+/* ═══════════════ POLLING ENGINE ═══════════════ */
+const POLL_MS      = 8000;
+const POLL_TIMEOUT = 300000;
+
+function startPolling(proxyUrl, jobId) {
+  const meta = jobMeta[jobId];
+  const t0   = Date.now();
+  updateJobRow(meta.rowId, 'polling', jobId);
+
+  const id = setInterval(async () => {
+    if (Date.now() - t0 > POLL_TIMEOUT) {
+      clearInterval(id); delete activePollers[jobId];
+      updateJobRow(meta.rowId, 'error', jobId);
+      setGalleryError(meta.rowId, 'Timed out after 5 minutes');
+      toast(`⏰ ${meta.label} timed out`, 'error');
+      checkAllDone(); return;
+    }
+    try {
+      const result = await proxyPoll(proxyUrl, jobId);
+      if (result.status === 'completed' && result.image_url) {
+        clearInterval(id); delete activePollers[jobId];
+        updateJobRow(meta.rowId, 'done', jobId);
+        revealImage(meta.rowId, result.image_url, meta.label, meta.aspect, meta.prompt);
+        toast(`🖼️ ${meta.label} is ready!`, 'success');
+        checkAllDone();
+      } else if (result.status === 'failed') {
+        clearInterval(id); delete activePollers[jobId];
+        updateJobRow(meta.rowId, 'error', jobId);
+        setGalleryError(meta.rowId, 'Higgsfield reported failure');
+        toast(`❌ ${meta.label} failed`, 'error');
+        checkAllDone();
+      }
+    } catch (err) { console.warn('Poll retry:', err.message); }
+  }, POLL_MS);
+
+  activePollers[jobId] = id;
+}
+
+function checkAllDone() {
+  if (Object.keys(activePollers).length === 0) {
+    setStep(4);
+    toast('🎉 All images processed!', 'success');
+  }
+}
+
+/* ═══════════════ GALLERY DOM ═══════════════ */
+function addGalleryCard(rowId, label, aspect) {
+  const spec = { '4:5':'1080 × 1350', '9:16':'1080 × 1920' };
+  const card = document.createElement('div');
+  card.className = 'img-card'; card.id = `card-${rowId}`;
+  card.innerHTML = `
+    <div class="img-skeleton" id="skel-${rowId}">
+      <div class="skel-icon">🎨</div>
+      <div class="skel-txt">Generating ${label}…<br><span style="font-size:.68rem">Polling proxy every 8s</span></div>
+      <div class="skel-bar"></div>
+    </div>
+    <div class="img-footer">
+      <div class="img-title">${label}</div>
+      <div class="img-spec">${aspect} · ${spec[aspect]||''}</div>
+      <button class="btn-copy" id="copy-${rowId}" onclick="copyPromptFor('${rowId}')" disabled>Copy Prompt</button>
+    </div>`;
+  document.getElementById('gallery').appendChild(card);
+}
+
+function revealImage(rowId, url, label, aspect, prompt) {
+  const skel = document.getElementById(`skel-${rowId}`);
+  const card = document.getElementById(`card-${rowId}`);
+  const btn  = document.getElementById(`copy-${rowId}`);
+  if (skel) {
+    const img = document.createElement('img');
+    img.src = url; img.className = 'img-reveal'; img.alt = label;
+    img.onerror = () => setGalleryError(rowId, 'Image failed to load — open URL manually');
+    skel.replaceWith(img);
+  }
+  if (card) { card.classList.add('done'); card.dataset.prompt = prompt; card.dataset.url = url; }
+  if (btn)  btn.disabled = false;
+}
+
+function setGalleryError(rowId, msg) {
+  const skel = document.getElementById(`skel-${rowId}`);
+  if (skel) {
+    skel.style.animation = 'none';
+    skel.style.background = 'rgba(255,80,80,0.07)';
+    skel.innerHTML = `<div style="color:#ff6464;text-align:center;padding:0 16px"><div style="font-size:1.6rem;margin-bottom:8px">❌</div><div style="font-size:.78rem">${msg}</div></div>`;
+  }
+}
+
+function copyPromptFor(rowId) {
+  const p = document.getElementById(`card-${rowId}`)?.dataset?.prompt;
+  if (p) navigator.clipboard.writeText(p).then(() => toast('✅ Prompt copied!', 'success'));
+}
+
+/* ═══════════════ JOB LOG DOM ═══════════════ */
+function addJobRow(id, icon, label, aspect, prompt, status, jobId) {
+  const row = document.createElement('div');
+  row.className = 'job-row'; row.id = id;
+  row.innerHTML = `
+    <div class="job-icon">${icon}</div>
+    <div class="job-meta">
+      <div class="job-label">${label} <span style="color:var(--muted);font-weight:400;font-size:.76rem">· ${aspect}</span></div>
+      <div class="job-id" id="${id}-jid">Job ID: ${jobId}</div>
+      <div class="job-prompt">${prompt}</div>
+    </div>
+    <div><span class="badge ${status}" id="${id}-badge">${blabel(status)}</span></div>`;
+  document.getElementById('jobList').appendChild(row);
+}
+
+function updateJobRow(id, status, jobId) {
+  const jid   = document.getElementById(`${id}-jid`);
+  const badge = document.getElementById(`${id}-badge`);
+  const row   = document.getElementById(id);
+  if (jid)   jid.textContent   = status === 'error' ? `Error: ${jobId}` : `Job ID: ${jobId}`;
+  if (badge) { badge.textContent = blabel(status); badge.className = `badge ${status}`; }
+  if (row && status === 'done') row.classList.add('done');
+}
+
+function blabel(s) {
+  return {queued:'⏳ Queued',submitted:'📤 Submitted',polling:'🔄 Polling…',done:'✅ Done',error:'❌ Error'}[s]||s;
+}
+
+/* ═══════════════ UTILS ═══════════════ */
+function setStep(n) {
+  for (let i=1;i<=4;i++) {
+    document.getElementById(`step${i}`).className = 'step'+(i<n?' done':i===n?' active':'');
+  }
+}
+function setBtn(disabled, html) {
+  const b = document.getElementById('submitBtn');
+  b.disabled = disabled; b.innerHTML = html;
+}
+function toast(msg, type='info') {
+  const a = document.getElementById('toast-area');
+  const t = document.createElement('div');
+  t.className=`toast ${type}`; t.textContent=msg;
+  a.appendChild(t); setTimeout(()=>t.remove(),4800);
+}
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+function resetAll() {
+  Object.values(activePollers).forEach(clearInterval);
+  activePollers={}; jobMeta={};
+  document.getElementById('brandName').value='ArrivalOS';
+  document.getElementById('featureDesc').value='Trusted airport-to-city transfer solution available worldwide.';
+  document.getElementById('ctaText').value='PLAN MY ARRIVAL';
+  ['primary','secondary'].forEach((k,i)=>{
+    const v=i===0?'#50c878':'#ffd700';
+    document.getElementById(`${k}Color`).value=v;
+    document.getElementById(`${k}Hex`).value=v;
+  });
+  selectedFeature='Airport Transfers';
+  document.querySelectorAll('.chip').forEach((c,i)=>c.classList.toggle('active',i===0));
+  document.getElementById('jobList').innerHTML=`<div class="empty" id="emptyLog"><span>🤖</span><div>Click <strong style="color:var(--gold)">Generate &amp; Preview</strong> to start.</div></div>`;
+  document.getElementById('gallery').innerHTML=`<div class="empty" id="emptyGallery" style="grid-column:1/-1"><span>🎨</span><div>Generated images appear here in real time.</div></div>`;
+  setStep(1); setBtn(false,'🚀 Generate &amp; Preview');
+}
+</script>
+</body>
+</html>
