@@ -381,7 +381,7 @@ let activePollers   = {};
 let jobMeta         = {};
 
 // Your live Vercel backend — customers never see or touch this.
-const API_BASE_URL = 'https://arrivalos-ugc-backend.vercel.app';
+const API_BASE_URL = '/api/higgsfield';
 
 /* ═══════════════ COLOR SYNC ═══════════════ */
 ['primary','secondary'].forEach(k => {
@@ -407,7 +407,7 @@ document.querySelectorAll('.chip').forEach(c => {
 function buildPrompts(brand, feature, primary, secondary, cta, context) {
   const p = name(primary), s = name(secondary);
   return [
-    { label:'Instagram Feed Post',      aspect:'4:5',  icon:'📱',
+    { label:'Instagram Feed Post',      aspect:'3:4',  icon:'📱',
       prompt:`Authentic UGC lifestyle photo at airport arrivals terminal. Traveler holding smartphone with emerald and gold mobile app interface. Luxury black vehicle softly blurred background. Natural golden-hour window light cinematic warm tones. Candid real person genuine moment. Close-up on hand and phone screen. No text no words no letters anywhere. High-end travel photography.` },
     { label:'Story Thumbnail',          aspect:'9:16', icon:'📲',
       prompt:`Vertical 9:16 authentic UGC photo for a ${feature} travel app. Hand holding a smartphone in a natural grip, ${p} and ${s} color palette in the scene. Background: soft-blur ${context}. Natural side-lighting, authentic shadows, real-world candid scene. Bright, clean, social-native. Composition leaves clean empty space in the top third and bottom third for text to be added later. IMPORTANT: no text, no words, no letters, no writing, no logos, no captions, no UI text anywhere in the image — a purely visual photograph only.` },
