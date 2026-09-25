@@ -16,7 +16,7 @@ const HF_BASE = 'https://api.higgsfield.ai';
 // console.higgsfield.ai's own API docs for this account (Explore models →
 // Soul 2 → API tab). This is a Higgsfield-owned model, not a licensed
 // third-party one, which is why it's reliably available on the API.
-const MODEL_ID = 'higgsfield-ai/soul/v2/standard';
+const MODEL_ID = 'nano-banana-2';
 
 export default async function handler(req, res) {
   // CORS — allows your Netlify-hosted frontend to call this Vercel function
