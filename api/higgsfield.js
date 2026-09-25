@@ -41,7 +41,7 @@ export default async function handler(req, res) {
       const { prompt, aspect_ratio } = req.body;
       if (!prompt) return res.status(400).json({ error: 'Missing prompt' });
 
-      const r = await fetch(`${HF_BASE}/${MODEL_ID}`, {
+      const r = await fetch(`${HF_BASE}/generate/image/${MODEL_ID}`, {
         method: 'POST',
         headers: { 'Authorization': authHeader, 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, aspect_ratio: aspect_ratio || '1:1' })
