@@ -170,6 +170,12 @@
     .btn-copy { width: 100%; padding: 8px; font-size: .8rem; font-weight: 600; background: rgba(255,215,0,0.1); border: 1px solid var(--gold); border-radius: 6px; color: var(--gold); cursor: pointer; transition: all .2s; font-family: inherit; }
     .btn-copy:hover:not(:disabled) { background: rgba(255,215,0,0.2); }
     .btn-copy:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-dl { width:100%;padding:8px;font-size:.8rem;font-weight:700;background:linear-gradient(120deg,#50c878,#3aaf66);border:none;border-radius:6px;color:#0f1419;cursor:pointer;transition:all .2s;font-family:inherit;margin-top:6px; }
+    .btn-dl:hover:not(:disabled) { transform:translateY(-1px);box-shadow:0 4px 12px rgba(80,200,120,.35); }
+    .btn-dl:disabled { opacity:.4;cursor:not-allowed;transform:none; }
+    .btn-canva { width:100%;padding:8px;font-size:.8rem;font-weight:700;background:linear-gradient(120deg,#7d2ae8,#a259ff);border:none;border-radius:6px;color:#fff;cursor:pointer;transition:all .2s;font-family:inherit;margin-top:6px; }
+    .btn-canva:hover:not(:disabled) { transform:translateY(-1px);box-shadow:0 4px 14px rgba(125,42,232,.45); }
+    .btn-canva:disabled { opacity:.4;cursor:not-allowed;transform:none; }
 
     .empty { text-align: center; color: var(--muted); padding: 48px 0; }
     .empty span { font-size: 2.8rem; display: block; margin-bottom: 12px; opacity: .5; }
@@ -365,7 +371,7 @@
 
 <footer>
   <p>Powered by <strong>Vercel</strong> · <strong>Higgsfield Nano Banana Pro</strong> · Built for Kayo Services</p>
-  <p style="margin-top:6px">Kayo UGC Agent v2 · White-Label SaaS · Next: Phase C — One-Click Download</p>
+  <p style="margin-top:6px">Kayo UGC Agent v2 · ✅ Download + Canva handoff ready · Test & generate!</p>
 </footer>
 
 <script>
@@ -375,7 +381,7 @@ let activePollers   = {};
 let jobMeta         = {};
 
 // Your live Vercel backend — customers never see or touch this.
-const API_BASE_URL = 'https://arrivalos-ugc-backend.vercel.app/api/higgsfield';
+const API_BASE_URL = 'https://arrivalos-ugc-backend.vercel.app';
 
 /* ═══════════════ COLOR SYNC ═══════════════ */
 ['primary','secondary'].forEach(k => {
@@ -401,12 +407,12 @@ document.querySelectorAll('.chip').forEach(c => {
 function buildPrompts(brand, feature, primary, secondary, cta, context) {
   const p = name(primary), s = name(secondary);
   return [
-    { label:'Instagram Feed Post',      aspect:'4:5',  icon:'📱',
-      prompt:`Instagram feed post for ${brand} ${feature} app. Authentic UGC photo: traveler holding smartphone showing ${brand} app (${p} UI, ${s} accent buttons) at ${context}. Luxury vehicle blurred bokeh. Natural golden-hour window light, cinematic warmth. Real person, genuine moment. Phone shows "${feature}" with location pin and "${cta}" CTA. High-end travel photography, bright and clean.` },
+    { label:'Instagram Feed Post',      aspect:'3:4',  icon:'📱',
+      prompt:`Authentic UGC photo for a ${feature} travel app. Real person (traveler) holding a smartphone at ${context}, ${p} and ${s} color palette in the scene. Luxury vehicle in blurred bokeh background. Natural golden-hour window light, cinematic warmth, genuine candid moment. High-end travel photography, bright and clean. Composition leaves clean empty space in the lower third for text to be added later. IMPORTANT: no text, no words, no letters, no writing, no logos, no captions, no UI text anywhere in the image — a purely visual photograph only.` },
     { label:'Story Thumbnail',          aspect:'9:16', icon:'📲',
-      prompt:`Instagram TikTok Story for ${brand}. Vertical 9:16 UGC: hand holding phone (natural grip) showing ${brand} ${feature}. ${p} and ${s} palette on UI. Background: soft-blur ${context}. Natural side-lighting, authentic shadows. Real-world scene. Shows "${feature}" header, location icon, live status, ${s} "${cta}" CTA. Bright, clean, social-native.` },
+      prompt:`Vertical 9:16 authentic UGC photo for a ${feature} travel app. Hand holding a smartphone in a natural grip, ${p} and ${s} color palette in the scene. Background: soft-blur ${context}. Natural side-lighting, authentic shadows, real-world candid scene. Bright, clean, social-native. Composition leaves clean empty space in the top third and bottom third for text to be added later. IMPORTANT: no text, no words, no letters, no writing, no logos, no captions, no UI text anywhere in the image — a purely visual photograph only.` },
     { label:'Reel / TikTok Thumbnail',  aspect:'9:16', icon:'🎬',
-      prompt:`TikTok Reel YouTube Shorts thumbnail for ${brand} ${feature}. Vertical 9:16 split: left — ${context} luxury vehicle; right — ${brand} app (${p} bg, ${s} elements). Bold hook, cinematic contrast. "${feature}" in ${s} top-third. Authentic UGC, real travelers, no CGI. Thumb-stopping, social-optimised.` }
+      prompt:`Vertical 9:16 thumbnail-style photo for a ${feature} travel app. Cinematic, high-contrast, thumb-stopping composition at ${context} with a luxury vehicle, ${p} and ${s} color palette. Authentic UGC feel, real travelers, no CGI. Composition leaves clean empty space in the top third for a bold headline to be added later. IMPORTANT: no text, no words, no letters, no writing, no logos, no captions, no UI text anywhere in the image — a purely visual photograph only.` }
   ];
 }
 
@@ -537,7 +543,7 @@ function checkAllDone() {
 
 /* ═══════════════ GALLERY DOM ═══════════════ */
 function addGalleryCard(rowId, label, aspect) {
-  const spec = { '4:5':'1080 × 1350', '9:16':'1080 × 1920' };
+  const spec = { '3:4':'1080 × 1440', '9:16':'1080 × 1920' };
   const card = document.createElement('div');
   card.className = 'img-card'; card.id = `card-${rowId}`;
   card.innerHTML = `
@@ -550,6 +556,8 @@ function addGalleryCard(rowId, label, aspect) {
       <div class="img-title">${label}</div>
       <div class="img-spec">${aspect} · ${spec[aspect]||''}</div>
       <button class="btn-copy" id="copy-${rowId}" onclick="copyPromptFor('${rowId}')" disabled>Copy Prompt</button>
+      <button class="btn-dl" id="dl-${rowId}" onclick="downloadImage('${rowId}')" disabled>⬇ Download PNG</button>
+      <button class="btn-canva" id="canva-${rowId}" onclick="openInCanva('${rowId}')" disabled>✏️ Add Text in Canva</button>
     </div>`;
   document.getElementById('gallery').appendChild(card);
 }
@@ -564,8 +572,12 @@ function revealImage(rowId, url, label, aspect, prompt) {
     img.onerror = () => setGalleryError(rowId, 'Image failed to load — open URL manually');
     skel.replaceWith(img);
   }
-  if (card) { card.classList.add('done'); card.dataset.prompt = prompt; card.dataset.url = url; }
+  if (card) { card.classList.add('done'); card.dataset.prompt = prompt; card.dataset.url = url; card.dataset.label = label; }
   if (btn)  btn.disabled = false;
+  const dlBtn    = document.getElementById(`dl-${rowId}`);
+  const canvaBtn = document.getElementById(`canva-${rowId}`);
+  if (dlBtn)    dlBtn.disabled    = false;
+  if (canvaBtn) canvaBtn.disabled = false;
 }
 
 function setGalleryError(rowId, msg) {
@@ -580,6 +592,102 @@ function setGalleryError(rowId, msg) {
 function copyPromptFor(rowId) {
   const p = document.getElementById(`card-${rowId}`)?.dataset?.prompt;
   if (p) navigator.clipboard.writeText(p).then(() => toast('✅ Prompt copied!', 'success'));
+}
+
+/* ── DOWNLOAD PNG ── */
+async function downloadImage(rowId) {
+  const card  = document.getElementById(`card-${rowId}`);
+  const dlBtn = document.getElementById(`dl-${rowId}`);
+  const url   = card?.dataset?.url;
+  const label = card?.dataset?.label || 'ugc-image';
+  if (!url) { toast('No image URL yet', 'error'); return; }
+  const filename = label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.png';
+  dlBtn.disabled = true; dlBtn.textContent = '⏳ Saving…';
+  try {
+    const res  = await fetch(url, { mode: 'cors' });
+    if (!res.ok) throw new Error('Fetch failed');
+    const blob = await res.blob();
+    const obj  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = obj; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(obj), 1000);
+    toast(`📥 Saved as ${filename}`, 'success');
+    dlBtn.textContent = '✅ Saved!';
+    setTimeout(() => { dlBtn.textContent = '⬇ Download PNG'; dlBtn.disabled = false; }, 3000);
+  } catch(e) {
+    toast(`❌ Download failed: ${e.message}`, 'error');
+    dlBtn.textContent = '⬇ Download PNG'; dlBtn.disabled = false;
+  }
+}
+
+/* ── CANVA HANDOFF ── */
+function openInCanva(rowId) {
+  const card  = document.getElementById(`card-${rowId}`);
+  const label = card?.dataset?.label || 'UGC Image';
+  const brand = document.getElementById('brandName')?.value || 'ArrivalOS';
+  const cta   = document.getElementById('ctaText')?.value   || 'PLAN MY ARRIVAL';
+  const feat  = document.querySelector('.chip.active')?.dataset?.val || 'Airport Transfers';
+  const isFeed   = label.includes('Feed');
+  const canvaUrl = isFeed
+    ? 'https://www.canva.com/create/social-media-posts/'
+    : 'https://www.canva.com/create/instagram-stories/';
+  const text =
+`=== PASTE INTO CANVA ===
+Brand:    ${brand}
+Feature:  ${feat}
+CTA:      ${cta}
+Tagline:  Smarter Arrivals. Seamless Journeys.
+Colors:   Emerald #50c878 · Gold #ffd700
+Format:   ${label}
+
+STEPS:
+1. Download PNG first (⬇ button)
+2. In Canva: Upload → set as background
+3. Add text boxes using details above
+4. Export PNG 1080px wide
+========================`;
+  navigator.clipboard.writeText(text).catch(() => {});
+  showCanvaGuide(label, canvaUrl, text);
+}
+
+function showCanvaGuide(label, canvaUrl, text) {
+  document.getElementById('canvaGuide')?.remove();
+  const o = document.createElement('div');
+  o.id = 'canvaGuide';
+  o.style.cssText = 'position:fixed;inset:0;background:rgba(15,20,25,.92);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px';
+  o.innerHTML = `
+    <div style="background:#1a2847;border:1px solid #ffd700;border-radius:16px;padding:30px;max-width:480px;width:100%;font-family:Inter,sans-serif">
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="font-size:2.2rem;margin-bottom:8px">✏️</div>
+        <h2 style="color:#ffd700;font-size:1.2rem;margin-bottom:6px">Add Brand Text in Canva</h2>
+        <p style="color:#a8adb5;font-size:.82rem;line-height:1.6">Higgsfield made the background. Canva adds crisp, perfect text — no distortion ever.</p>
+      </div>
+      <div style="background:rgba(0,0,0,.3);border-radius:10px;padding:14px;margin-bottom:14px">
+        <div style="color:#ffd700;font-weight:600;font-size:.8rem;margin-bottom:8px">📋 4 Steps</div>
+        <ol style="color:#a8adb5;font-size:.78rem;line-height:2.2;padding-left:16px">
+          <li>Click <strong style="color:#e8eaed">⬇ Download PNG</strong> to save the image</li>
+          <li>Click <strong style="color:#a259ff">Open Canva</strong> below</li>
+          <li>Upload PNG → set as full background → add text boxes</li>
+          <li>Export PNG 1080px wide → done ✅</li>
+        </ol>
+      </div>
+      <div style="background:rgba(162,89,255,.1);border:1px solid rgba(162,89,255,.3);border-radius:8px;padding:12px;margin-bottom:16px">
+        <div style="color:#a259ff;font-weight:600;font-size:.76rem;margin-bottom:5px">📌 Brand details copied to clipboard</div>
+        <pre style="color:#a8adb5;font-size:.68rem;white-space:pre-wrap;margin:0;line-height:1.6">${text}</pre>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="window.open('${canvaUrl}','_blank');document.getElementById('canvaGuide').remove()"
+          style="flex:1;padding:12px;background:linear-gradient(120deg,#7d2ae8,#a259ff);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:.9rem;cursor:pointer;font-family:inherit">
+          ✏️ Open Canva
+        </button>
+        <button onclick="document.getElementById('canvaGuide').remove()"
+          style="flex:1;padding:12px;background:rgba(255,255,255,.08);color:#a8adb5;border:1px solid rgba(255,215,0,.15);border-radius:8px;font-size:.88rem;cursor:pointer;font-family:inherit">
+          Close
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(o);
 }
 
 /* ═══════════════ JOB LOG DOM ═══════════════ */
