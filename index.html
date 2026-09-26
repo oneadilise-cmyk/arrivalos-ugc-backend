@@ -198,14 +198,48 @@
 
     footer { text-align: center; margin-top: 50px; color: var(--muted); font-size: .8rem; }
     footer strong { color: var(--gold); }
+    /* LOGIN DOOR */
+    #loginDoor { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px;
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%); }
+    #loginDoor[hidden] { display: none; }
+    .door-card { width: 100%; max-width: 400px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 16px; padding: 30px 26px; text-align: center; }
+    .door-card h2 { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; margin-bottom: 8px;
+      background: linear-gradient(120deg, var(--gold) 0%, var(--emerald) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .door-card p { color: var(--muted); font-size: .88rem; line-height: 1.55; margin-bottom: 20px; }
+    .door-card input { width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid var(--border); background: rgba(0,0,0,0.25);
+      color: var(--text); font-size: 1rem; text-align: center; letter-spacing: .04em; margin-bottom: 12px; }
+    .door-card input:focus { outline: none; border-color: var(--gold); }
+    .door-card button { width: 100%; padding: 13px; border: none; border-radius: 10px; font-weight: 700; font-size: .95rem; cursor: pointer;
+      background: linear-gradient(120deg, var(--gold) 0%, var(--emerald) 100%); color: var(--navy); }
+    .door-card button:disabled { opacity: .6; cursor: wait; }
+    .door-msg { min-height: 20px; margin-top: 12px; font-size: .84rem; color: #ff8a8a; }
+    .door-foot { margin-top: 18px; font-size: .76rem; color: var(--muted); }
+    .user-pill { display: inline-flex; align-items: center; gap: 10px; margin-top: 12px; padding: 6px 8px 6px 14px; border-radius: 999px;
+      border: 1px solid var(--border); font-size: .8rem; color: var(--muted); }
+    .user-pill strong { color: var(--emerald); }
+    .user-pill button { border: 1px solid var(--border); background: transparent; color: var(--text); border-radius: 999px; padding: 4px 10px; font-size: .75rem; cursor: pointer; }
   </style>
 </head>
 <body>
+
+<!-- LOGIN DOOR: invite-only. Codes are set in Vercel (ACCESS_CODES). -->
+<div id="loginDoor">
+  <form class="door-card" id="doorForm" autocomplete="off">
+    <h2>✈️ ArrivalOS UGC Agent</h2>
+    <p>This tool is invite-only while we test it.<br>Enter the access code Kayo sent you.</p>
+    <input type="text" id="doorCode" placeholder="Your access code" autocapitalize="off" spellcheck="false" required />
+    <button type="submit" id="doorBtn">Enter</button>
+    <div class="door-msg" id="doorMsg" role="alert"></div>
+    <div class="door-foot">No code? Ask Kayo Services for an invite.</div>
+  </form>
+</div>
+
 <div class="wrap">
 
   <header>
     <h1>✈️ ArrivalOS UGC Agent</h1>
     <p>Powered by <strong style="color:var(--gold)">Kayo's secure backend</strong> — no API key needed, ever.</p>
+    <div class="user-pill" id="userPill" hidden>Signed in as <strong id="userName"></strong><button type="button" onclick="signOut()">Sign out</button></div>
   </header>
 
   <!-- PHASE STEPS -->
@@ -221,7 +255,7 @@
     <div class="proxy-icon">🔐</div>
     <div class="proxy-text">
       <div class="proxy-title">Connected to Kayo's Higgsfield Backend</div>
-      <div class="proxy-sub">Your Higgsfield credentials are stored server-side on Vercel. Clients just fill the form — no keys, no accounts.</div>
+      <div class="proxy-sub">Your Higgsfield credentials are stored server-side on Vercel. Invited testers just fill the form — no keys needed.</div>
     </div>
   </div>
 
@@ -383,6 +417,90 @@ let jobMeta         = {};
 // Your live Vercel backend — customers never see or touch this.
 const API_BASE_URL = '/api/higgsfield';
 
+/* ═══════════════ LOGIN DOOR ═══════════════ */
+const CODE_KEY = 'kayo_ugc_access_code';
+let accessCode = '';
+
+function rememberCode(code) { try { localStorage.setItem(CODE_KEY, code); } catch (e) {} }
+function forgetCode()       { try { localStorage.removeItem(CODE_KEY); } catch (e) {} }
+function savedCode()        { try { return localStorage.getItem(CODE_KEY) || ''; } catch (e) { return ''; } }
+
+function authHeaders() {
+  return { 'Content-Type': 'application/json', 'X-Access-Code': accessCode };
+}
+
+function showDoor(msg) {
+  document.getElementById('loginDoor').hidden = false;
+  document.getElementById('userPill').hidden = true;
+  document.getElementById('doorMsg').textContent = msg || '';
+  document.getElementById('doorCode').focus();
+}
+
+function openDoor(name) {
+  document.getElementById('loginDoor').hidden = true;
+  document.getElementById('userName').textContent = name;
+  document.getElementById('userPill').hidden = false;
+}
+
+async function tryCode(code) {
+  const res = await fetch(API_BASE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Access-Code': code },
+    body: JSON.stringify({ action: 'login' })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.ok && data.ok) return { name: data.name };
+  return { error: data.error || `Could not sign in (HTTP ${res.status})` };
+}
+
+async function signIn(code, quiet) {
+  const btn = document.getElementById('doorBtn');
+  btn.disabled = true; btn.textContent = 'Checking…';
+  try {
+    const result = await tryCode(code);
+    if (result.name) {
+      accessCode = code; rememberCode(code); openDoor(result.name);
+      if (!quiet) toast(`Welcome, ${result.name}!`, 'success');
+    } else {
+      forgetCode(); showDoor(quiet ? '' : result.error);
+    }
+  } catch (err) {
+    showDoor('Could not reach the server. Check your connection and try again.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Enter';
+  }
+}
+
+function signOut() {
+  Object.values(activePollers).forEach(clearInterval);
+  activePollers = {};
+  accessCode = ''; forgetCode();
+  document.getElementById('doorCode').value = '';
+  showDoor('');
+}
+
+// Called when the server rejects the code mid-session (e.g. you removed their invite).
+function handleLockedOut(data) {
+  if (data && (data.login_required || data.locked)) {
+    signOut();
+    showDoor(data.error);
+    return true;
+  }
+  return false;
+}
+
+document.getElementById('doorForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const code = document.getElementById('doorCode').value.trim();
+  if (code) signIn(code, false);
+});
+
+// Returning testers skip the door if their saved code still works.
+(function initDoor() {
+  const code = savedCode();
+  if (code) signIn(code, true); else showDoor('');
+})();
+
 /* ═══════════════ COLOR SYNC ═══════════════ */
 ['primary','secondary'].forEach(k => {
   document.getElementById(`${k}Color`).addEventListener('input', e => {
@@ -476,10 +594,11 @@ async function runPipeline() {
 async function proxySubmit(proxyUrl, prompt, aspect_ratio) {
   const res = await fetch(proxyUrl, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders(),
     body: JSON.stringify({ action: 'submit', prompt, aspect_ratio })
   });
   const data = await res.json();
+  if (handleLockedOut(data)) throw new Error('Please sign in again');
   if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
   if (!data.job_id) throw new Error('No Job ID returned from proxy');
   return data.job_id;
@@ -488,10 +607,11 @@ async function proxySubmit(proxyUrl, prompt, aspect_ratio) {
 async function proxyPoll(proxyUrl, job_id) {
   const res = await fetch(proxyUrl, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders(),
     body: JSON.stringify({ action: 'poll', job_id })
   });
   const data = await res.json();
+  if (handleLockedOut(data)) throw new Error('Please sign in again');
   if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
   return data; // { status, image_url }
 }
