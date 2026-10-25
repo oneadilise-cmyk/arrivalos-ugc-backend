@@ -1,5 +1,6 @@
 // Vercel serverless function: keeps Higgsfield credentials server-side.
-// The page sends { action: 'submit', prompt, aspect_ratio } or { action: 'poll', job_id }.
+// The page sends { action: 'login' }, { action: 'submit', prompt, aspect_ratio } or { action: 'poll', job_id },
+// always with an X-Access-Code header. Only invited testers (listed in ACCESS_CODES) get through.
 // Docs: https://docs.higgsfield.ai (SOUL V2 text-to-image + GET /requests/{id}/status)
 
 const HF_BASE = 'https://api.higgsfield.ai';
@@ -7,6 +8,39 @@ const MODEL = 'higgsfield-ai/soul/v2/standard';
 const ALLOWED_RATIOS = ['9:16', '16:9', '4:3', '3:4', '1:1', '2:3', '3:2'];
 const RATIO_FALLBACK = { '4:5': '3:4', '5:4': '4:3' };
 const FAILED_STATES = ['failed', 'nsfw', 'canceled'];
+const crypto = require('crypto');
+
+// LOGIN DOOR — invite-only access.
+// In Vercel, set ACCESS_CODES to a comma-separated list of "Name:code" pairs, e.g.
+//   ACCESS_CODES = Adilise:gold-river-4821, Maria:blue-palm-7730
+// Add a pair to invite someone; delete it to remove their access. There is no public sign-up.
+// If ACCESS_CODES is missing, the door stays locked for everyone (safe default).
+function loadCodes() {
+  return (process.env.ACCESS_CODES || '')
+    .split(',')
+    .map(pair => pair.trim())
+    .filter(Boolean)
+    .map(pair => {
+      const i = pair.lastIndexOf(':');
+      return i > 0
+        ? { name: pair.slice(0, i).trim(), code: pair.slice(i + 1).trim() }
+        : { name: 'Tester', code: pair };
+    })
+    .filter(entry => entry.code.length >= 6);
+}
+
+function sameText(a, b) {
+  const x = Buffer.from(String(a));
+  const y = Buffer.from(String(b));
+  return x.length === y.length && crypto.timingSafeEqual(x, y);
+}
+
+// Returns the tester's name for a valid code, otherwise null.
+function checkCode(code) {
+  if (!code) return null;
+  const match = loadCodes().find(entry => sameText(entry.code, code.trim()));
+  return match ? match.name : null;
+}
 
 // Accepts the env var names from Higgsfield's docs plus common variants,
 // so existing Vercel settings keep working.
@@ -55,7 +89,7 @@ async function callHiggsfield(path, auth, options = {}) {
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Access-Code');
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -74,6 +108,21 @@ module.exports = async function handler(req, res) {
     try { body = JSON.parse(body); } catch { body = {}; }
   }
 
+  // LOGIN DOOR: every action needs a valid invite code, checked before any credits are spent.
+  if (!loadCodes().length) {
+    return res.status(503).json({
+      error: 'The tool is locked: no access codes are set up yet. Add ACCESS_CODES in Vercel.',
+      locked: true,
+    });
+  }
+  const tester = checkCode(req.headers['x-access-code']);
+  if (!tester) {
+    return res.status(401).json({ error: 'That access code is not valid.', login_required: true });
+  }
+  if (body.action === 'login') {
+    return res.status(200).json({ ok: true, name: tester });
+  }
+
   try {
     if (body.action === 'submit') {
       const prompt = (body.prompt || '').trim();
@@ -87,6 +136,8 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({ prompt, aspect_ratio: aspect, resolution: '1080p', batch_size: 1 }),
       });
       if (!data.request_id) return res.status(502).json({ error: 'Higgsfield returned no request_id' });
+      // Shows up in Vercel → Logs, so you can see who is using the tool and how often.
+      console.log(`[usage] ${tester} generated ${aspect} image (job ${data.request_id})`);
       return res.status(200).json({ job_id: data.request_id, status: data.status || 'queued' });
     }
 
